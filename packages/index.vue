@@ -9,12 +9,12 @@
       <div v-show="showProgressBar" ref="audioProgressWrap" class="audio__progress-wrap"
         @click.stop="handleClickProgressWrap">
         <div ref="audioProgress" class="audio__progress" :style="{
-          backgroundColor: themeColor,
-        }" />
+      backgroundColor: themeColor,
+    }" />
         <div ref="audioProgressPoint" class="audio__progress-point" :style="{
-          backgroundColor: themeColor,
-          boxShadow: `0 0 10px 0 ${themeColor}`,
-        }" @panstart="handleProgressPanstart" @panend="handleProgressPanend" @panmove="handleProgressPanmove" />
+      backgroundColor: themeColor,
+      boxShadow: `0 0 10px 0 ${themeColor}`,
+    }" @panstart="handleProgressPanstart" @panend="handleProgressPanend" @panmove="handleProgressPanmove" />
       </div>
 
       <div class="audio__duration">
@@ -24,15 +24,15 @@
 
     <div class="audio__btn-wrap">
       <div v-if="showPlaybackRate" class="audio__play-rate" :style="{
-        color: themeColor,
-      }">
+      color: themeColor,
+    }">
         <span @click.stop="isShowRates = !isShowRates">{{
-          playbackRate.toFixed(1) + 'x'
-        }}</span>
+      playbackRate.toFixed(1) + 'x'
+    }}</span>
         <transition name="fade-rate">
           <div v-show="isShowRates" class="audio__play-rate__dropdown" :style="{
-                backgroundColor: themeColor,
-              }">
+        backgroundColor: themeColor,
+      }">
             <div v-for="rate in playbackRates" :key="'pr_' + rate" @click.stop="handleSetPlaybackRate(rate)">
               {{ rate.toFixed(1) + 'x' }}
             </div>
@@ -42,8 +42,8 @@
 
       <div v-if="showPrevButton" class="audio__play-prev" :class="{ disable: !isLoop && currentPlayIndex === 0 }"
         @click.stop="playPrev" :style="{
-          color: themeColor,
-        }">
+      color: themeColor,
+    }">
         <slot name="play-prev">
           <svg class="audio__play-icon" aria-hidden="true">
             <use xlink:href="#icon-play-prev" />
@@ -53,14 +53,14 @@
 
       <div v-if="isLoading && showPlayLoading" class="audio__play-loading">
         <span v-for="item in 8" :key="item" :style="{
-          backgroundColor: themeColor,
-        }" />
+      backgroundColor: themeColor,
+    }" />
       </div>
 
       <template v-else>
         <div v-if="!isPlaying && showPlayButton" class="audio__play-start" @click.stop="play" :style="{
-          color: themeColor,
-        }">
+      color: themeColor,
+    }">
           <slot name="play-start">
             <svg class="audio__play-icon" aria-hidden="true">
               <use xlink:href="#icon-play" />
@@ -69,8 +69,8 @@
         </div>
 
         <div v-else-if="showPlayButton" class="audio__play-pause" @click.stop="pause" :style="{
-          color: themeColor,
-        }">
+      color: themeColor,
+    }">
           <slot name="play-pause">
             <svg class="audio__play-icon" aria-hidden="true">
               <use xlink:href="#icon-pause" />
@@ -80,10 +80,10 @@
       </template>
 
       <div v-if="showNextButton" class="audio__play-next" :class="{
-        disable: !isLoop && currentPlayIndex === audioList.length - 1,
-      }" @click.stop="playNext" :style="{
-  color: themeColor,
-}">
+      disable: !isLoop && currentPlayIndex === audioList.length - 1,
+    }" @click.stop="playNext" :style="{
+      color: themeColor,
+    }">
         <slot name="play-next">
           <svg class="audio__play-icon" aria-hidden="true">
             <use xlink:href="#icon-play-next" />
@@ -93,8 +93,8 @@
 
       <div v-if="showVolumeButton" class="audio__play-volume-icon-wrap">
         <svg class="audio__play-icon" aria-hidden="true" :style="{
-          color: themeColor,
-        }" @click.stop="handleVolumeIconTouchstart">
+      color: themeColor,
+    }" @click.stop="handleVolumeIconTouchstart">
           <use :xlink:href="currentVolume ? `#icon-volume` : `#icon-volume-no`" />
         </svg>
 
@@ -102,9 +102,9 @@
           <div v-show="isShowVolume" ref="playVolumeWrap" class="audio__play-volume-wrap"
             @click.stop="handleVolumePanmove" @panmove="handleVolumePanmove" @panend="handleVolumePanend">
             <div ref="playVolume" class="audio__play-volume" :style="{
-              height: currentVolume * 100 + '%',
-              backgroundColor: themeColor,
-            }" />
+      height: currentVolume * 100 + '%',
+      backgroundColor: themeColor,
+    }" />
           </div>
         </transition>
       </div>
@@ -651,6 +651,10 @@ export default {
   animation: fadeRate 0.3s reverse;
 }
 
+.audio-player {
+  margin: 25px 0;
+}
+
 .audio-player .audio__btn-wrap {
   position: relative;
   display: flex;
@@ -790,10 +794,11 @@ export default {
 
 .audio-player .audio__progress-wrap {
   position: relative;
-  background: #ddd;
+  background: #88BFE1;
   height: 4px;
+  width: 80%;
   border-radius: 3px;
-  margin-top: 20px;
+  /* margin-top: 20px; */
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -829,6 +834,7 @@ export default {
   margin: -3px 0 0 -3px;
   background: #fff;
   border-radius: 50%;
+  display: none;
 }
 
 .audio-player .audio__time-wrap {
@@ -836,9 +842,11 @@ export default {
   flex-direction: row;
   justify-content: space-between;
   margin-top: 7px;
+  margin-bottom: 7px;
+  align-items: center;
 }
 
-.audio-player .audio__current-time {
+/* .audio-player .audio__current-time {
   font-size: 10px;
   color: #888;
 }
@@ -846,6 +854,14 @@ export default {
 .audio-player .audio__duration {
   font-size: 10px;
   color: #888;
+} */
+
+.audio-player .audio__current-time,
+.audio-player .audio__duration {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #000000 !important;
+    font-family: 'Lyon Text Web';
 }
 
 .audio-player .audio-player__audio {
