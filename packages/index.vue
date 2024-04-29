@@ -51,6 +51,15 @@
         </slot>
       </div>
 
+      <!-- skip-back-10 icon -->
+      <div class="audio__skip-back" @click="goBack">
+        <slot name="skip-back">
+          <!-- <svg class="audio_skip-back-icon" aria-hidden="true">
+            <use xlink:href="#icon-skip-back" />
+          </svg> -->
+        </slot>
+      </div>
+
       <div v-if="isLoading && showPlayLoading" class="audio__play-loading">
         <span v-for="item in 8" :key="item" :style="{
       backgroundColor: themeColor,
@@ -78,6 +87,15 @@
           </slot>
         </div>
       </template>
+
+      <!-- skip-forward-30 icon -->
+      <div class="audio__skip-forward" @click="goForward">
+        <slot name="skip-forward">
+          <!-- <svg class="audio_skip-forward-icon" aria-hidden="true">
+            <use xlink:href="#icon-skip-forward" />
+          </svg> -->
+        </slot>
+      </div>
 
       <div v-if="showNextButton" class="audio__play-next" :class="{
       disable: !isLoop && currentPlayIndex === audioList.length - 1,
@@ -120,14 +138,15 @@
 
     <audio ref="audio" class="audio-player__audio" :src="audioList[currentPlayIndex]" v-bind="$attrs" @ended="onEnded"
       @timeupdate="onTimeUpdate" @loadedmetadata="onLoadedmetadata">
-      浏览器太老咯，请升级浏览器吧~
+      Il browser è troppo vecchio, aggiorna il browser
     </audio>
   </div>
 </template>
 
 <script>
-import Core from '@any-touch/core'
-import Pan from '@any-touch/pan'
+/* This is a fork of vue-audio-player package. The repo is on Flagar Github */
+import Core from '../any-touch/core'
+import Pan from '../any-touch/pan'
 
 export default {
   name: 'AudioPlayer',
@@ -135,85 +154,71 @@ export default {
   inheritAttrs: false,
 
   props: {
-    // 音频播放列表
     audioList: {
       default: null,
       type: Array,
     },
 
-    // 是否显示播放按钮
     showPlayButton: {
       default: true,
       type: Boolean,
     },
 
-    // 是否显示上一首按钮
     showPrevButton: {
       default: true,
       type: Boolean,
     },
 
-    // 是否显示下一首按钮
     showNextButton: {
       default: true,
       type: Boolean,
     },
 
-    // 是否显示音量按钮
     showVolumeButton: {
       default: true,
       type: Boolean,
     },
 
-    // 显示进度条
     showProgressBar: {
       default: true,
       type: Boolean,
     },
 
-    // 播放前的回调函数
     beforePlay: {
       default: null,
       type: Function,
     },
 
-    // 上一首前的回调函数
     beforePrev: {
       default: null,
       type: Function,
     },
 
-    // 下一首前的回调函数
     beforeNext: {
       default: null,
       type: Function,
     },
 
-    // 是否列表循环播放
     isLoop: {
       type: Boolean,
       default: true,
     },
 
-    // 是否自动播放下一首
     isAutoPlayNext: {
       type: Boolean,
       default: true,
     },
 
-    // 进度更新间隔
     progressInterval: {
       default: 1000,
       type: Number,
     },
 
-    // 是否显示倍速播放速率
     showPlaybackRate: {
       type: Boolean,
       default: true,
     },
 
-    // 是否显示播放时的 loading
     showPlayLoading: {
       type: Boolean,
       default: true,
@@ -229,13 +234,11 @@ export default {
       default: '#EC4141',
     },
 
-    // 是否禁用进度条可拖拽功能
     disabledProgressDrag: {
       type: Boolean,
       default: false,
     },
 
-    // 是否禁用进度条可点击功能
     disabledProgressClick: {
       type: Boolean,
       default: false,
@@ -256,25 +259,26 @@ export default {
     'playing',
     'play',
     'play-error',
+    'go-forward',
   ],
 
   data() {
     return {
-      isIOS: /iPhone|iPad|iPod/i.test(window.navigator.userAgent), // 是否是IOS设备
-      isPlaying: false, // 音频是否正在播放
-      isDragging: false, // 是否正在拖拽音频进度
-      isDraggingVolume: false, // 是否正在拖拽音量进度
+      isIOS: /iPhone|iPad|iPod/i.test(window.navigator.userAgent),
+      isPlaying: false,
+      isDragging: false,
+      isDraggingVolume: false,
       isShowErrorMessage: false,
       isLoading: false,
       isShowVolume: false,
       isShowRates: false,
       timer: null,
       noticeMessage: '',
-      duration: '', // 音频持续时间
-      currentPlayIndex: 0, // 当前播放的音频位置索引
-      currentTime: '', // 音频当前播放时间
-      currentVolume: 1, // 当前音量
-      playbackRate: 1, // 当前播放速率
+      duration: '',
+      currentPlayIndex: 0,
+      currentTime: '',
+      currentVolume: 1,
+      playbackRate: 1,
       at: null,
     }
   },
@@ -322,14 +326,12 @@ export default {
       this.isShowVolume = false
     },
 
-    // 设定播放速率
     handleSetPlaybackRate(rate) {
       this.playbackRate = +rate
       this.$refs.audio.playbackRate = +rate
       this.isShowRates = false
     },
 
-    // 错误消息处理
     handleShowErrorMessage(opts = {}) {
       this.noticeMessage = opts.message
       this.isShowErrorMessage = true
@@ -339,34 +341,26 @@ export default {
       }, opts.duration || 3000)
     },
 
-    // 当媒介元素的持续时间以及其它媒介已加载数据时运行脚本
     onLoadedmetadata(event) {
       this.duration = this.$refs.audio.duration
       this.$emit('loadedmetadata', event)
     },
 
-    // 当前的播放位置发送改变时触发
     onTimeUpdate(event) {
       this.$emit('timeupdate', event)
     },
 
-    // 格式化秒为分
     formatTime(second) {
-      // 将秒数除以60，然后下舍入，既得到分钟数
       let hour
       hour = Math.floor(second / 60)
-      // 取得秒%60的余数，既得到秒数
       second = Math.ceil(second % 60)
-      // 将变量转换为字符串
       hour += ''
       second += ''
-      // 如果只有一位数，前面增加一个0
       hour = hour.length === 1 ? '0' + hour : hour
       second = second.length === 1 ? '0' + second : second
       return hour + ':' + second
     },
 
-    // 音频播放完毕
     onEnded(event) {
       window.setTimeout(() => {
         this.pause()
@@ -407,17 +401,13 @@ export default {
         this.$refs.audioProgressWrap.offsetWidth,
       )
       offsetLeft = Math.max(offsetLeft, 0)
-      // 设置点点位置
       this.setPointPosition(offsetLeft)
-      // 设置进度条
       this.$refs.audioProgress.style.width = offsetLeft + 'px'
-      // 设置当前时间
       this.currentTime =
         (offsetLeft / this.$refs.audioProgressWrap.offsetWidth) * this.duration
       this.$emit('progress-move', event)
     },
 
-    // 初始化音频进度的点击逻辑
     handleClickProgressWrap(event) {
       if (this.disabledProgressClick) return
 
@@ -428,27 +418,21 @@ export default {
         return
       }
 
-      // 设置当前播放位置
       this.currentTime =
         (offsetX / this.$refs.audioProgressWrap.offsetWidth) * this.duration
       this.$refs.audio.currentTime = this.currentTime
-      // 设置点点位置
       this.setPointPosition(offsetX)
-      // 设置进度条
       this.$refs.audioProgress.style.width = offsetX + 'px'
       this.play()
       this.$emit('progress-click', event)
     },
 
-    // 设置点点位置
     setPointPosition(offsetLeft) {
       this.$refs.audioProgressPoint.style.left =
         offsetLeft - this.$refs.audioProgressPoint.offsetWidth / 2 + 'px'
     },
 
-    // 播放中
     playing() {
-      // 正在拖拽进度
       if (this.isDragging) {
         return
       }
@@ -458,12 +442,11 @@ export default {
         this.$refs.audioProgressWrap.offsetWidth
 
       this.currentTime = this.$refs.audio.currentTime
-      this.$refs.audioProgress.style.width = offsetLeft + 'px' // 设置播放进度条
-      this.setPointPosition(offsetLeft) // 设置播放进度拖拽点位置
+      this.$refs.audioProgress.style.width = offsetLeft + 'px'
+      this.setPointPosition(offsetLeft)
       this.$emit('playing')
     },
 
-    // 开始播放
     play() {
       this.isLoading = true
 
@@ -506,11 +489,10 @@ export default {
           })
       }
 
-      // 解决 iOS 异步请求后无法播放
       if (this.isIOS) {
-        console.log(
+        /* console.log(
           '为了解决 iOS 设备接口异步请求后出现无法播放问题，请无视 The play() request was interrupted by a call to pause() 错误',
-        )
+        ) */
         this.$refs.audio.play()
         this.$refs.audio.pause()
       }
@@ -527,7 +509,6 @@ export default {
       handlePlay()
     },
 
-    // 暂停播放
     pause() {
       this.$refs.audio.pause()
       this.$nextTick(() => {
@@ -537,10 +518,8 @@ export default {
       })
     },
 
-    // 播放上一首
     playPrev() {
       if (this.currentPlayIndex <= 0 && !this.isLoop) {
-        // 无上一首了
         return
       }
 
@@ -610,6 +589,18 @@ export default {
 
       handleNext()
     },
+
+    goForward() {
+      this.currentTime += 30;
+      this.$refs.audio.currentTime = this.currentTime;
+      this.$emit('go-forward');
+    },
+
+    goBack() {
+      this.currentTime -= 10;
+      this.$refs.audio.currentTime = this.currentTime;
+      this.$emit('go-back');
+    }
   },
 }
 </script>
@@ -658,9 +649,17 @@ export default {
 .audio-player .audio__btn-wrap {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  margin-top: 25px;
 }
+
+.audio-player .audio__btn-wrap div:nth-child(1) {
+  order: 2;
+  flex-basis: 100%;
+  margin-top: 24px;
+} 
 
 .audio-player .audio__play-icon {
   width: 100%;
@@ -670,14 +669,30 @@ export default {
 }
 
 .audio-player .audio__play-volume-icon-wrap {
-  position: relative;
-  width: 21px;
-  height: 21px;
-  cursor: pointer;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  margin-left: 16px;
+  display: none;
+}
+
+@media(min-width: 960px) {
+  .audio-player .audio__btn-wrap {
+    flex-wrap: nowrap;
+  }
+
+  .audio-player .audio__btn-wrap div:nth-child(1) {
+    order: 0;
+    flex-basis: unset;
+    margin-top: 0;
+  }
+
+  .audio-player .audio__play-volume-icon-wrap {
+    display: block;
+    position: relative;
+    width: 21px;
+    height: 21px;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
 }
 
 .audio-player .audio__play-volume-icon-wrap .audio__play-volume-wrap {
@@ -685,6 +700,7 @@ export default {
   width: 14px;
   height: 50px;
   bottom: 21px;
+  /* left: 33px; */
   left: 0;
   background-color: #ddd;
   border-radius: 10px;
@@ -700,14 +716,17 @@ export default {
 
 .audio-player .audio__play-rate {
   position: relative;
+  display: flex;
+  justify-content: center;
   height: 21px;
   line-height: 21px;
+  /* padding-right: 28px; */
   cursor: pointer;
   touch-action: none;
   user-select: none;
   -webkit-user-drag: none;
-  font-size: 14px;
-  margin-right: 16px;
+  font-size: 19px;
+  /* margin-right: 16px; */
 }
 
 .audio-player .audio__play-rate__dropdown {
@@ -735,12 +754,44 @@ export default {
   height: 33px;
 }
 
+/* skip-forward & skip back */
+.audio__skip-back {
+  margin-left: 48px;
+} 
+
+.audio__skip-forward {
+  margin-right: 48px;
+} 
+
+.audio__skip-forward img,
+.audio__skip-back img {
+  height: 35px;
+  width: 30px;
+}
+
+.audio__skip-forward,
+.audio__skip-back {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.audio__skip-forward:hover,
+.audio__skip-back:hover {
+  opacity: 0.7;
+}
+
+.audio__skip-forward:active,
+.audio__skip-back:active {
+  transform: scale(0.9);
+}
+/* end skip-forward & skip back */
+
 .audio-player .audio__play-prev.disable {
   opacity: 0.5;
 }
 
 .audio-player .audio__play-start {
-  margin: 0 16px;
+  margin: 0 48px;
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -749,12 +800,12 @@ export default {
 
 .audio-player .audio__play-start svg {
   display: block;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 }
 
 .audio-player .audio__play-pause {
-  margin: 0 16px;
+  margin: 0 48px;
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -765,6 +816,11 @@ export default {
   display: block;
   width: 42px;
   height: 42px;
+}
+
+.audio-player .audio__play-start:hover,
+.audio-player .audio__play-pause:hover {
+  opacity: 0.7;
 }
 
 .audio-player .audio__play-next {
@@ -796,13 +852,19 @@ export default {
   position: relative;
   background: #88BFE1;
   height: 4px;
-  width: 80%;
+  width: 60%;
   border-radius: 3px;
   /* margin-top: 20px; */
   cursor: pointer;
   touch-action: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+@media(min-width: 960px) {
+  .audio-player .audio__progress-wrap {
+    width: 75%;
+  }
 }
 
 .audio-player .audio__progress {
@@ -858,10 +920,11 @@ export default {
 
 .audio-player .audio__current-time,
 .audio-player .audio__duration {
-    font-size: 14px !important;
-    font-weight: 400 !important;
-    color: #000000 !important;
-    font-family: 'Lyon Text Web';
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0px;
+  text-align: left;
+  line-height: 16px;
 }
 
 .audio-player .audio-player__audio {
@@ -884,7 +947,7 @@ export default {
   width: 42px;
   height: 42px;
   position: relative;
-  margin: 0 16px;
+  margin: 0 48px;
 }
 
 .audio__play-loading span {
