@@ -30,11 +30,16 @@
       playbackRate.toFixed(1) + 'x'
     }}</span>
         <transition name="fade-rate">
-          <div v-show="isShowRates" class="audio__play-rate__dropdown" :style="{
-        backgroundColor: themeColor,
-      }">
-            <div v-for="rate in playbackRates" :key="'pr_' + rate" @click.stop="handleSetPlaybackRate(rate)">
+          <div v-show="isShowRates" class="audio__play-rate__dropdown">
+            <div class="play-rate__dropdown-title">
+              Velocità di riproduzione
+            </div>
+            <div class="play-rate___dropdown-elements" v-for="rate in playbackRates" :key="'pr_' + rate" @click.stop="handleSetPlaybackRate(rate)" 
+            :style="{color: playbackRate == rate ? '#006EAF' : '#7E7E7C'}">
               {{ rate.toFixed(1) + 'x' }}
+              <div v-if="playbackRate == rate" class="check-rate__icon">
+                <img src="../../../../img/icons/check.svg" alt="check">
+              </div>
             </div>
           </div>
         </transition>
@@ -109,20 +114,26 @@
         </slot>
       </div>
 
-      <div v-if="showVolumeButton" class="audio__play-volume-icon-wrap">
-        <svg class="audio__play-icon" aria-hidden="true" :style="{
-      color: themeColor,
-    }" @click.stop="handleVolumeIconTouchstart">
-          <use :xlink:href="currentVolume ? `#icon-volume` : `#icon-volume-no`" />
-        </svg>
+      <div v-if="showVolumeButton" class="audio__play-volume-icon-wrap" @click.stop="handleVolumeIconTouchstart" :style="{
+          color: themeColor,
+          }">
+        <slot name="volume">
+          <svg class="audio__play-icon" aria-hidden="true" :style="{
+          color: themeColor,
+          }" @click.stop="handleVolumeIconTouchstart">
+            <use :xlink:href="currentVolume ? `#icon-volume` : `#icon-volume-no`" />
+          </svg>
+        </slot>
 
         <transition name="fade-volume">
           <div v-show="isShowVolume" ref="playVolumeWrap" class="audio__play-volume-wrap"
-            @click.stop="handleVolumePanmove" @panmove="handleVolumePanmove" @panend="handleVolumePanend">
-            <div ref="playVolume" class="audio__play-volume" :style="{
-      height: currentVolume * 100 + '%',
-      backgroundColor: themeColor,
-    }" />
+          @click.stop="handleVolumePanmove" @panmove="handleVolumePanmove" @panend="handleVolumePanend">
+            <div ref="playVolume" class="audio__play-volume" :style="{ width: currentVolume * 100 + '%', height: 4 + 'px', backgroundColor: themeColor,}">
+            </div>
+            <div :style="{ width: currentVolume * 100 + '%', height: 100 + '%'}">
+              <div class="audio__progress-point" :style="{ backgroundColor: themeColor, boxShadow: `0 0 10px 0 ${themeColor}`, left: currentVolume * 95 + '%'}"></div>
+            </div>
+            
           </div>
         </transition>
       </div>
@@ -310,17 +321,33 @@ export default {
 
     handleVolumePanmove(event) {
       let playVolumeWrapRect = this.$refs.playVolumeWrap.getBoundingClientRect()
+      let pageX = event.x
+      let offsetLeft
+      let volume
+      
+      offsetLeft = Math.round(pageX - playVolumeWrapRect.left)
+      volume = offsetLeft / this.$refs.playVolumeWrap.offsetWidth
+      volume = Math.min(volume, 1)
+      volume = Math.max(volume, 0)
+      this.$refs.audio.volume = volume
+      this.currentVolume = volume
+      this.$emit('handleVolume', event)
+    },
+
+    /* handleVolumePanmove(event) {
+      let playVolumeWrapRect = this.$refs.playVolumeWrap.getBoundingClientRect()
       let pageY = event.y
       let offsetTop
       let volume
-
+      
       offsetTop = Math.round(playVolumeWrapRect.bottom - pageY)
       volume = offsetTop / this.$refs.playVolumeWrap.offsetHeight
       volume = Math.min(volume, 1)
       volume = Math.max(volume, 0)
       this.$refs.audio.volume = volume
       this.currentVolume = volume
-    },
+      this.$emit('handleVolume', event)
+    }, */
 
     handleVolumePanend() {
       this.isShowVolume = false
@@ -591,13 +618,13 @@ export default {
     },
 
     goForward() {
-      this.currentTime += 30;
+      this.currentTime += 15;
       this.$refs.audio.currentTime = this.currentTime;
       this.$emit('go-forward');
     },
 
     goBack() {
-      this.currentTime -= 10;
+      this.currentTime -= 15;
       this.$refs.audio.currentTime = this.currentTime;
       this.$emit('go-back');
     }
@@ -608,13 +635,22 @@ export default {
 <style>
 @keyframes fadeVolume {
   from {
+    width: 0;
+  }
+
+  to {
+    width: 102px;
+  }
+}
+/* @keyframes fadeVolume {
+  from {
     height: 0;
   }
 
   to {
     height: 50px;
   }
-}
+} */
 
 @keyframes fadeRate {
   from {
@@ -659,7 +695,7 @@ export default {
   order: 2;
   flex-basis: 100%;
   margin-top: 24px;
-} 
+}
 
 .audio-player .audio__play-icon {
   width: 100%;
@@ -686,23 +722,29 @@ export default {
   .audio-player .audio__play-volume-icon-wrap {
     display: block;
     position: relative;
-    width: 21px;
-    height: 21px;
+    width: 37px;
+    height: 29px;
+    padding-top: 4px;
     cursor: pointer;
     touch-action: none;
     user-select: none;
     -webkit-user-drag: none;
   }
+
+  .audio-player .audio__play-volume-icon-wrap img {
+    width: auto;
+    height: auto;
+  }
 }
 
 .audio-player .audio__play-volume-icon-wrap .audio__play-volume-wrap {
   position: absolute;
-  width: 14px;
-  height: 50px;
+  width: 102px;
+  height: 4px;
   bottom: 21px;
-  /* left: 33px; */
-  left: 0;
-  background-color: #ddd;
+  left: 45px;
+  top: 15px;
+  background-color: #88BFE1;
   border-radius: 10px;
 }
 
@@ -734,11 +776,51 @@ export default {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px;
-  color: #fff;
-  border-radius: 15px;
+  padding: 8px 12px 24px 12px;
   font-size: 12px;
   overflow: hidden;
+  width: 140px;
+  height: 175px;
+  background-color: #F5F3ED;
+  border-radius: 4px;
+}
+
+.play-rate__dropdown-title {
+  margin-top: 0 !important;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  opacity: 100%;
+  color: #7E7E7C;
+}
+
+.play-rate___dropdown-elements {
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  opacity: 100%;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.check-rate__icon {
+  margin-top: 0 !important;
+  order: 0 !important;
+  flex-basis: unset !important;
+  position: relative;
+}
+
+.check-rate__icon img {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  right: -5px;
+  transform: translateY(-50%);
+  width: 17px;
+  max-width: unset;
+  height: 12px;
 }
 
 .audio-player .audio__play-prev {
@@ -757,11 +839,11 @@ export default {
 /* skip-forward & skip back */
 .audio__skip-back {
   margin-left: 48px;
-} 
+}
 
 .audio__skip-forward {
   margin-right: 48px;
-} 
+}
 
 .audio__skip-forward img,
 .audio__skip-back img {
@@ -784,6 +866,7 @@ export default {
 .audio__skip-back:active {
   transform: scale(0.9);
 }
+
 /* end skip-forward & skip back */
 
 .audio-player .audio__play-prev.disable {
@@ -814,8 +897,8 @@ export default {
 
 .audio-player .audio__play-pause svg {
   display: block;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 }
 
 .audio-player .audio__play-start:hover,
@@ -897,6 +980,12 @@ export default {
   background: #fff;
   border-radius: 50%;
   display: none;
+}
+
+.audio__play-volume-wrap .audio__progress-point {
+  top: -3px;
+  width: 11px;
+  height: 11px;
 }
 
 .audio-player .audio__time-wrap {
